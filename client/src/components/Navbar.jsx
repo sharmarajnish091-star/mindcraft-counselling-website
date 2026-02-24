@@ -6,6 +6,7 @@ const navItems = [
   { label: 'Services', href: '#services' },
   { label: 'Pricing', href: '#pricing' },
   { label: 'Testimonials', href: '#testimonials' },
+  { label: 'Blog', href: '#blog' },
   { label: 'FAQ', href: '#faq' },
   { label: 'Contact', href: '#contact' },
 ];
@@ -24,7 +25,10 @@ const Navbar = () => {
 
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-      <a href="#hero" className="nav-logo">MindCraft</a>
+      <a href="#hero" className="nav-logo">
+        <img src="/images/logo-horizontal.png" alt="MindCraft Counselling Services" className="nav-logo-img" />
+        <span className="nav-logo-text">MindCraft</span>
+      </a>
 
       <ul className={`nav-links ${mobileOpen ? 'active' : ''}`}>
         {navItems.map((item) => (

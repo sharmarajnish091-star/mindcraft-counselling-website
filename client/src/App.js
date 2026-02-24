@@ -9,6 +9,7 @@ import Certifications from './components/Certifications';
 import Approach from './components/Approach';
 import Testimonials from './components/Testimonials';
 import Booking from './components/Booking';
+import Blog from './components/Blog';
 import FAQ from './components/FAQ';
 import ContactForm from './components/ContactForm';
 import Footer from './components/Footer';
@@ -28,6 +29,7 @@ function App() {
       <Certifications />
       <Approach />
       <Testimonials />
+      <Blog />
       <Booking />
       <FAQ />
       <ContactForm />
