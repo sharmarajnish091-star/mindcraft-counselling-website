@@ -6,6 +6,7 @@ const path = require('path');
 require('dotenv').config();
 
 const contactRoutes = require('./routes/contact');
+const bookingRoutes = require('./routes/booking');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,8 +39,16 @@ const contactLimiter = rateLimit({
   message: { error: 'Too many form submissions. Please try again in an hour.' },
 });
 
+// Booking rate limit
+const bookingLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many booking attempts. Please try again in an hour.' },
+});
+
 // API Routes
 app.use('/api/contact', contactLimiter, contactRoutes);
+app.use('/api/booking', bookingLimiter, bookingRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
