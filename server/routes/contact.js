@@ -64,24 +64,32 @@ router.post('/', validateContact, async (req, res) => {
       </div>
     `;
 
-    await sendEmail({
-      subject: `New Inquiry: ${service} — from ${name}`,
-      html: emailHtml,
-      replyTo: email,
-    });
-
+    // Send response immediately — don't make user wait for email
     res.json({
       success: true,
       message: 'Thank you! Your message has been sent successfully. We will get back to you within 24 hours.',
     });
+
+    // Send email in background (non-blocking)
+    sendEmail({
+      subject: `New Inquiry: ${service} — from ${name}`,
+      html: emailHtml,
+      replyTo: email,
+    }).then(() => {
+      console.log(`Contact email sent for ${name}`);
+    }).catch((err) => {
+      console.error(`Contact email failed for ${name}:`, err.message);
+    });
+
   } catch (error) {
     console.error('Contact form error:', error);
 
-    // Even if email fails, the data is already saved to JSON
-    res.json({
-      success: true,
-      message: 'Thank you! Your message has been received. We will get back to you soon.',
-    });
+    if (!res.headersSent) {
+      res.json({
+        success: true,
+        message: 'Thank you! Your message has been received. We will get back to you soon.',
+      });
+    }
   }
 });
 

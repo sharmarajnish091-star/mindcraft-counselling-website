@@ -1,14 +1,17 @@
 const nodemailer = require('nodemailer');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: process.env.EMAIL_PORT || 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    connectionTimeout: 10000, // 10 seconds to connect
+    greetingTimeout: 10000,
+    socketTimeout: 15000, // 15 seconds for socket
+  });
+};
 
 const sendEmail = async ({ subject, html, replyTo }) => {
   const mailOptions = {
@@ -19,17 +22,34 @@ const sendEmail = async ({ subject, html, replyTo }) => {
     replyTo,
   };
 
-  // In development, log instead of sending
-  if (!process.env.EMAIL_USER || process.env.NODE_ENV === 'development') {
-    console.log('--- EMAIL (Dev Mode) ---');
+  // In development or if no credentials, log instead of sending
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log('--- EMAIL (No credentials) ---');
     console.log('To:', mailOptions.to);
     console.log('Subject:', mailOptions.subject);
     console.log('Reply-To:', replyTo);
     console.log('--- END ---');
-    return { messageId: 'dev-mode' };
+    return { messageId: 'no-credentials' };
   }
 
-  return transporter.sendMail(mailOptions);
+  try {
+    const transporter = createTransporter();
+
+    // Wrap in a timeout promise — never block more than 15 seconds
+    const result = await Promise.race([
+      transporter.sendMail(mailOptions),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Email send timeout (15s)')), 15000)
+      ),
+    ]);
+
+    console.log('Email sent successfully:', result.messageId);
+    return result;
+  } catch (error) {
+    console.error('Email send failed:', error.message);
+    // Don't throw — let the caller continue even if email fails
+    return { messageId: 'failed', error: error.message };
+  }
 };
 
 module.exports = { sendEmail };

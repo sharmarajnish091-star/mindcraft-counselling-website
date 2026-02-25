@@ -102,25 +102,34 @@ router.post('/', validateBooking, async (req, res) => {
       </div>
     `;
 
-    await sendEmail({
-      subject: `📅 New Booking: ${service} — ${name} (${date} ${time})`,
-      html: emailHtml,
-      replyTo: email || undefined,
-    });
-
+    // Send response immediately — don't make user wait for email
     res.json({
       success: true,
       bookingId: booking.id,
       message: 'Booking request received! We will confirm within 2 hours.',
     });
+
+    // Send email in background (non-blocking)
+    sendEmail({
+      subject: `New Booking: ${service} — ${name} (${date} ${time})`,
+      html: emailHtml,
+      replyTo: email || undefined,
+    }).then(() => {
+      console.log(`Email sent for booking ${booking.id}`);
+    }).catch((err) => {
+      console.error(`Email failed for booking ${booking.id}:`, err.message);
+    });
+
   } catch (error) {
     console.error('Booking error:', error);
 
-    // Even if email fails, the booking is already saved to JSON
-    res.json({
-      success: true,
-      message: 'Booking received! We will get back to you soon.',
-    });
+    // Even if something fails, try to respond
+    if (!res.headersSent) {
+      res.json({
+        success: true,
+        message: 'Booking received! We will get back to you soon.',
+      });
+    }
   }
 });
 
