@@ -11,6 +11,9 @@ const bookingRoutes = require('./routes/booking');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy (required for Render, Railway, and other reverse-proxy hosts)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: false,
